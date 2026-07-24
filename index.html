@@ -8,8 +8,6 @@
         :root {
             --cell-size: 75px;
             --grid-gap: 2px;
-            --bg-gold: linear-gradient(135deg, #ffd700, #daa520);
-            --bg-straw: linear-gradient(135deg, #f4a460, #cd853f);
         }
 
         body {
@@ -58,6 +56,12 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
+        
+        /* Disabled state for checkboxes */
+        .controls-group label input:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
 
         #stats {
             display: flex;
@@ -82,18 +86,15 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3); /* Dark backdrop for the grid gaps */
             transition: background 0.3s;
         }
-
-        #gameContainer.bg-gold { background: var(--bg-gold); }
-        #gameContainer.bg-straw { background: var(--bg-straw); }
 
         #gameGrid {
             display: grid;
             grid-template-columns: repeat(7, var(--cell-size));
             grid-template-rows: repeat(7, var(--cell-size));
             gap: var(--grid-gap);
-            background: rgba(0,0,0,0.2);
             padding: 5px;
             border-radius: 5px;
         }
@@ -101,14 +102,22 @@
         .cell {
             width: var(--cell-size);
             height: var(--cell-size);
-            background-color: #555;
+            background-color: #555; /* Default solid color for cells */
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.1s, background-color 0.2s;
+            transition: transform 0.1s;
             overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        /* Straw Background for Cells when "Harder" is checked */
+        .cell.straw-bg {
+            background-image: url('images/straw.jpg');
+            background-size: 100% 100%; /* Fills the cell exactly like the images */
+            background-repeat: no-repeat;
+            background-color: transparent;
         }
 
         .cell:active {
@@ -118,7 +127,7 @@
         .cell img {
             width: 100%;
             height: 100%;
-            object-fit: fill;
+            object-fit: fill; /* Your fix to prevent chopping off chicken heads */
             pointer-events: none; /* Let clicks pass through to the div */
         }
 
@@ -175,7 +184,7 @@
         <div class="controls-group">
             <label><input type="checkbox" id="chkSound"> Sound On</label>
             <label><input type="checkbox" id="chkImages"> Use Images</label>
-            <label><input type="checkbox" id="chkHarder"> Harder?</label>
+            <label><input type="checkbox" id="chkHarder" disabled> Harder?</label>
             <button id="quitBtn">Quit</button>
         </div>
 
@@ -185,7 +194,7 @@
         </div>
     </div>
 
-    <div id="gameContainer" class="bg-gold">
+    <div id="gameContainer">
         <div id="gameGrid"></div>
     </div>
 
@@ -209,13 +218,13 @@
         // --- Game State ---
         let N = 5;
         let misses = 0;
-        let speed = 500; // Starting interval in ms
+        let speed = 500; 
         let startTime = Date.now();
         let timerInterval = null;
         let isImageMode = false;
         let isSoundOn = false;
         let isHarder = false;
-        let bestTime = localStorage.getItem('foxGameBestTime') ? parseInt(localStorage.getItem('foxGameBestTime')) : 36000000; // Default 10 hrs in ms
+        let bestTime = localStorage.getItem('foxGameBestTime') ? parseInt(localStorage.getItem('foxGameBestTime')) : 36000000; 
 
         // --- DOM Elements ---
         const grid = document.getElementById('gameGrid');
@@ -245,21 +254,28 @@
             if (!isSoundOn) return;
             const s = sounds[name];
             if (s) {
-                s.currentTime = 0; // Reset to start for rapid firing
+                s.currentTime = 0; 
                 s.play().catch(e => console.log("Audio play blocked:", e));
             }
         }
 
         // --- Initialization ---
         function init() {
-            // Load settings
             isSoundOn = localStorage.getItem('foxGameSound') === 'true';
             isImageMode = localStorage.getItem('foxGameImages') === 'true';
             isHarder = localStorage.getItem('foxGameHarder') === 'true';
 
             chkSound.checked = isSoundOn;
             chkImages.checked = isImageMode;
-            chkHarder.checked = isHarder;
+            
+            // If loading into Image mode, enable Harder
+            chkHarder.disabled = !isImageMode;
+            if (isImageMode) {
+                chkHarder.checked = isHarder;
+            } else {
+                isHarder = false;
+                chkHarder.checked = false;
+            }
 
             generateGrid();
             updateUI();
@@ -276,11 +292,11 @@
                 grid.appendChild(cell);
                 initCell(cell);
             }
+            applyHarderModeToCells();
         }
 
         function initCell(cell) {
             if (isImageMode) {
-                // 5% chance Fox, 95% chance Chicken
                 if (Math.random() < 0.05) {
                     cell.dataset.type = 'fox';
                     cell.innerHTML = '<img src="images/fox.png" alt="Fox">';
@@ -290,7 +306,6 @@
                     cell.innerHTML = `<img src="images/chicken${chickNum}.png" alt="Chicken">`;
                 }
             } else {
-                // 1/7 chance Red, 6/7 chance other colors
                 if (Math.random() < (1 / 7)) {
                     cell.dataset.type = 'red';
                     cell.style.backgroundColor = 'red';
@@ -302,8 +317,22 @@
                     cell.innerHTML = '';
                 }
             }
-            // Record timestamp for the 1-second rule
             cell.dataset.timestamp = Date.now(); 
+        }
+
+        // --- Harder Mode Logic ---
+        function applyHarderModeToCells() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                if (isHarder && isImageMode) {
+                    cell.classList.add('straw-bg');
+                } else {
+                    cell.classList.remove('straw-bg');
+                }
+            });
+            
+            // Toggle custom cursor class on container
+            container.classList.toggle('image-mode', isImageMode);
         }
 
         // --- Game Loop ---
@@ -313,15 +342,14 @@
             speed = 500;
             startTime = Date.now();
             
-            // Reset all cells
             Array.from(grid.children).forEach(cell => initCell(cell));
+            applyHarderModeToCells(); // Re-apply straw backgrounds after reset
             
             updateUI();
             
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(gameTick, speed);
             
-            // Start UI timer update
             if (window.uiTimer) clearInterval(window.uiTimer);
             window.uiTimer = setInterval(updateTimerLabel, 100);
         }
@@ -331,17 +359,13 @@
             const cell = grid.children[randomIndex];
             const elapsed = Date.now() - parseInt(cell.dataset.timestamp);
 
-            // If it's a target (Fox or Red)
             if (cell.dataset.type === 'fox' || cell.dataset.type === 'red') {
                 if (elapsed >= 1000) {
-                    // It's been on screen for > 1 second and wasn't clicked -> MISS
                     misses++;
                     updateMissesLabel();
-                    initCell(cell); // Change it to a non-target
+                    initCell(cell); 
                 }
-                // If < 1000ms, do nothing (let it stay)
             } else {
-                // Not a target, just change it to something else
                 initCell(cell);
             }
         }
@@ -357,23 +381,20 @@
             playSound('gun');
 
             if (cell.dataset.type === 'fox' || cell.dataset.type === 'red') {
-                // SUCCESS
                 playSound(cell.dataset.type);
                 N--;
-                initCell(cell); // Change back to non-target
+                initCell(cell); 
                 updateInstructionsLabel();
                 
                 if (N <= 0) {
                     winGame();
                 }
             } else {
-                // FAIL
                 misses++;
                 playSound('wrong');
                 updateMissesLabel();
                 
-                // Speed up (decrease interval)
-                speed = Math.max(50, speed - 10); // Cap at 50ms so it doesn't break the browser
+                speed = Math.max(50, speed - 10); 
                 restartTimer();
             }
         }
@@ -404,7 +425,6 @@
             updateInstructionsLabel();
             updateMissesLabel();
             updateTimerLabel();
-            updateBackgrounds();
         }
 
         function updateInstructionsLabel() {
@@ -425,18 +445,6 @@
             lblTime.innerText = formatTime(duration);
         }
 
-        function updateBackgrounds() {
-            if (isImageMode) {
-                container.classList.add('image-mode');
-                container.classList.toggle('bg-straw', isHarder);
-                container.classList.toggle('bg-gold', !isHarder);
-            } else {
-                container.classList.remove('image-mode');
-                container.classList.remove('bg-straw');
-                container.classList.add('bg-gold');
-            }
-        }
-
         function formatTime(ms) {
             const totalSec = Math.floor(ms / 1000);
             const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
@@ -455,13 +463,23 @@
             isImageMode = chkImages.checked;
             localStorage.setItem('foxGameImages', isImageMode);
             
-            // Reset game state when changing modes
+            // Disable Harder mode if not using images (matches original VB logic)
+            chkHarder.disabled = !isImageMode;
+            if (!isImageMode) {
+                isHarder = false;
+                chkHarder.checked = false;
+                localStorage.setItem('foxGameHarder', false);
+            } else {
+                isHarder = chkHarder.checked;
+            }
+            
             N = 5;
             misses = 0;
             speed = 500;
             startTime = Date.now();
             
             Array.from(grid.children).forEach(cell => initCell(cell));
+            applyHarderModeToCells();
             updateUI();
             restartTimer();
         });
@@ -469,7 +487,7 @@
         chkHarder.addEventListener('change', () => {
             isHarder = chkHarder.checked;
             localStorage.setItem('foxGameHarder', isHarder);
-            updateBackgrounds();
+            applyHarderModeToCells(); // Update cell backgrounds immediately
         });
 
         quitBtn.addEventListener('click', () => {
