@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fox In The Coop</title>
+    <style>
+        :root {
+            --cell-size: 75px;
+            --grid-gap: 2px;
+            --bg-gold: linear-gradient(135deg, #ffd700, #daa520);
+            --bg-straw: linear-gradient(135deg, #f4a460, #cd853f);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Top Controls & Info */
+        #header {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 2px solid #444;
+        }
+
+        #instructions {
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .controls-group label {
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        #stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        #quitBtn {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        #quitBtn:hover { background: #c9302c; }
+
+        /* Game Grid */
+        #gameContainer {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: background 0.3s;
+        }
+
+        #gameContainer.bg-gold { background: var(--bg-gold); }
+        #gameContainer.bg-straw { background: var(--bg-straw); }
+
+        #gameGrid {
+            display: grid;
+            grid-template-columns: repeat(7, var(--cell-size));
+            grid-template-rows: repeat(7, var(--cell-size));
+            gap: var(--grid-gap);
+            background: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background-color: #555;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, background-color 0.2s;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .cell:active {
+            transform: scale(0.95);
+        }
+
+        .cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; /* Let clicks pass through to the div */
+        }
+
+        /* Custom Cursor for Image Mode */
+        #gameContainer.image-mode #gameGrid {
+            cursor: url('images/target.png') 15 15, crosshair;
+        }
+        
+        #gameContainer.image-mode .cell {
+            cursor: url('images/target.png') 15 15, crosshair;
+        }
+
+        /* Modal for Game Over */
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        #modalOverlay.active { display: flex; }
+
+        #modalBox {
+            background: #fff;
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        #modalBox h2 { margin-top: 0; color: #d9534f; }
+        #modalBox p { font-size: 1.1rem; line-height: 1.5; }
+        #modalBox button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            font-size: 1rem;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #modalBox button:hover { background: #4cae4c; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div id="instructions">Shoot 5 foxes to exit.</div>
+        
+        <div class="controls-group">
+            <label><input type="checkbox" id="chkSound"> Sound On</label>
+            <label><input type="checkbox" id="chkImages"> Use Images</label>
+            <label><input type="checkbox" id="chkHarder"> Harder?</label>
+            <button id="quitBtn">Quit</button>
+        </div>
+
+        <div id="stats">
+            <span id="lblMisses">Targets missed: 0</span>
+            <span id="lblTime">00:00:00</span>
+        </div>
+    </div>
+
+    <div id="gameContainer" class="bg-gold">
+        <div id="gameGrid"></div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="modalOverlay">
+        <div id="modalBox">
+            <h2>Game Over!</h2>
+            <p id="modalText"></p>
+            <button id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="sndGun" src="sounds/gun.mp3" preload="auto"></audio>
+    <audio id="sndFox" src="sounds/fox.mp3" preload="auto"></audio>
+    <audio id="sndChicken" src="sounds/chicken.mp3" preload="auto"></audio>
+    <audio id="sndRed" src="sounds/red.mp3" preload="auto"></audio>
+    <audio id="sndWrong" src="sounds/wrong.mp3" preload="auto"></audio>
+
+    <script>
+        // --- Game State ---
+        let N = 5;
+        let misses = 0;
+        let speed = 500; // Starting interval in ms
+        let startTime = Date.now();
+        let timerInterval = null;
+        let isImageMode = false;
+        let isSoundOn = false;
+        let isHarder = false;
+        let bestTime = localStorage.getItem('foxGameBestTime') ? parseInt(localStorage.getItem('foxGameBestTime')) : 36000000; // Default 10 hrs in ms
+
+        // --- DOM Elements ---
+        const grid = document.getElementById('gameGrid');
+        const container = document.getElementById('gameContainer');
+        const lblInstructions = document.getElementById('instructions');
+        const lblMisses = document.getElementById('lblMisses');
+        const lblTime = document.getElementById('lblTime');
+        const chkSound = document.getElementById('chkSound');
+        const chkImages = document.getElementById('chkImages');
+        const chkHarder = document.getElementById('chkHarder');
+        const quitBtn = document.getElementById('quitBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalText = document.getElementById('modalText');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+
+        // Audio setup
+        const sounds = {
+            gun: document.getElementById('sndGun'),
+            fox: document.getElementById('sndFox'),
+            chicken: document.getElementById('sndChicken'),
+            red: document.getElementById('sndRed'),
+            wrong: document.getElementById('sndWrong')
+        };
+        Object.values(sounds).forEach(s => s.volume = 0.25);
+
+        function playSound(name) {
+            if (!isSoundOn) return;
+            const s = sounds[name];
+            if (s) {
+                s.currentTime = 0; // Reset to start for rapid firing
+                s.play().catch(e => console.log("Audio play blocked:", e));
+            }
+        }
+
+        // --- Initialization ---
+        function init() {
+            // Load settings
+            isSoundOn = localStorage.getItem('foxGameSound') === 'true';
+            isImageMode = localStorage.getItem('foxGameImages') === 'true';
+            isHarder = localStorage.getItem('foxGameHarder') === 'true';
+
+            chkSound.checked = isSoundOn;
+            chkImages.checked = isImageMode;
+            chkHarder.checked = isHarder;
+
+            generateGrid();
+            updateUI();
+            startGame();
+        }
+
+        function generateGrid() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                grid.appendChild(cell);
+                initCell(cell);
+            }
+        }
+
+        function initCell(cell) {
+            if (isImageMode) {
+                // 5% chance Fox, 95% chance Chicken
+                if (Math.random() < 0.05) {
+                    cell.dataset.type = 'fox';
+                    cell.innerHTML = '<img src="images/fox.png" alt="Fox">';
+                } else {
+                    cell.dataset.type = 'chicken';
+                    const chickNum = Math.floor(Math.random() * 6) + 1;
+                    cell.innerHTML = `<img src="images/chicken${chickNum}.png" alt="Chicken">`;
+                }
+            } else {
+                // 1/7 chance Red, 6/7 chance other colors
+                if (Math.random() < (1 / 7)) {
+                    cell.dataset.type = 'red';
+                    cell.style.backgroundColor = 'red';
+                    cell.innerHTML = '';
+                } else {
+                    cell.dataset.type = 'other';
+                    const colors = ['orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+                    cell.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    cell.innerHTML = '';
+                }
+            }
+            // Record timestamp for the 1-second rule
+            cell.dataset.timestamp = Date.now(); 
+        }
+
+        // --- Game Loop ---
+        function startGame() {
+            N = 5;
+            misses = 0;
+            speed = 500;
+            startTime = Date.now();
+            
+            // Reset all cells
+            Array.from(grid.children).forEach(cell => initCell(cell));
+            
+            updateUI();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(gameTick, speed);
+            
+            // Start UI timer update
+            if (window.uiTimer) clearInterval(window.uiTimer);
+            window.uiTimer = setInterval(updateTimerLabel, 100);
+        }
+
+        function gameTick() {
+            const randomIndex = Math.floor(Math.random() * 49);
+            const cell = grid.children[randomIndex];
+            const elapsed = Date.now() - parseInt(cell.dataset.timestamp);
+
+            // If it's a target (Fox or Red)
+            if (cell.dataset.type === 'fox' || cell.dataset.type === 'red') {
+                if (elapsed >= 1000) {
+                    // It's been on screen for > 1 second and wasn't clicked -> MISS
+                    misses++;
+                    updateMissesLabel();
+                    initCell(cell); // Change it to a non-target
+                }
+                // If < 1000ms, do nothing (let it stay)
+            } else {
+                // Not a target, just change it to something else
+                initCell(cell);
+            }
+        }
+
+        function restartTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(gameTick, speed);
+        }
+
+        // --- Interactions ---
+        function handleCellClick(e) {
+            const cell = e.currentTarget;
+            playSound('gun');
+
+            if (cell.dataset.type === 'fox' || cell.dataset.type === 'red') {
+                // SUCCESS
+                playSound(cell.dataset.type);
+                N--;
+                initCell(cell); // Change back to non-target
+                updateInstructionsLabel();
+                
+                if (N <= 0) {
+                    winGame();
+                }
+            } else {
+                // FAIL
+                misses++;
+                playSound('wrong');
+                updateMissesLabel();
+                
+                // Speed up (decrease interval)
+                speed = Math.max(50, speed - 10); // Cap at 50ms so it doesn't break the browser
+                restartTimer();
+            }
+        }
+
+        function winGame() {
+            clearInterval(timerInterval);
+            clearInterval(window.uiTimer);
+            
+            const duration = Date.now() - startTime;
+            const timeStr = formatTime(duration);
+            const missStr = misses === 1 ? "miss" : "misses";
+            
+            let msg = `You completed the game in ${timeStr} with ${misses} ${missStr}.`;
+            
+            if (duration < bestTime) {
+                const diff = bestTime - duration;
+                msg += `<br><br><b>Congratulations!</b> You beat your previous best time by ${formatTime(diff)}!`;
+                bestTime = duration;
+                localStorage.setItem('foxGameBestTime', bestTime.toString());
+            }
+            
+            modalText.innerHTML = msg;
+            modalOverlay.classList.add('active');
+        }
+
+        // --- UI Updates ---
+        function updateUI() {
+            updateInstructionsLabel();
+            updateMissesLabel();
+            updateTimerLabel();
+            updateBackgrounds();
+        }
+
+        function updateInstructionsLabel() {
+            if (isImageMode) {
+                if (N === 1) lblInstructions.innerText = "Shoot 1 more fox to exit.";
+                else lblInstructions.innerText = `Shoot ${N} foxes to exit.`;
+            } else {
+                lblInstructions.innerText = `Click the red button ${N} times to exit.`;
+            }
+        }
+
+        function updateMissesLabel() {
+            lblMisses.innerText = `Targets missed: ${misses}`;
+        }
+
+        function updateTimerLabel() {
+            const duration = Date.now() - startTime;
+            lblTime.innerText = formatTime(duration);
+        }
+
+        function updateBackgrounds() {
+            if (isImageMode) {
+                container.classList.add('image-mode');
+                container.classList.toggle('bg-straw', isHarder);
+                container.classList.toggle('bg-gold', !isHarder);
+            } else {
+                container.classList.remove('image-mode');
+                container.classList.remove('bg-straw');
+                container.classList.add('bg-gold');
+            }
+        }
+
+        function formatTime(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSec % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        // --- Event Listeners for Controls ---
+        chkSound.addEventListener('change', () => {
+            isSoundOn = chkSound.checked;
+            localStorage.setItem('foxGameSound', isSoundOn);
+        });
+
+        chkImages.addEventListener('change', () => {
+            isImageMode = chkImages.checked;
+            localStorage.setItem('foxGameImages', isImageMode);
+            
+            // Reset game state when changing modes
+            N = 5;
+            misses = 0;
+            speed = 500;
+            startTime = Date.now();
+            
+            Array.from(grid.children).forEach(cell => initCell(cell));
+            updateUI();
+            restartTimer();
+        });
+
+        chkHarder.addEventListener('change', () => {
+            isHarder = chkHarder.checked;
+            localStorage.setItem('foxGameHarder', isHarder);
+            updateBackgrounds();
+        });
+
+        quitBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to quit?")) {
+                clearInterval(timerInterval);
+                clearInterval(window.uiTimer);
+                document.body.innerHTML = "<h1 style='color:white; text-align:center; margin-top:50px;'>Thanks for playing! You can close this tab.</h1>";
+            }
+        });
+
+        playAgainBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+            startGame();
+        });
+
+        // --- Start the App ---
+        window.onload = init;
+    </script>
+</body>
+</html>
