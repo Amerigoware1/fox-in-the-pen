@@ -26,14 +26,14 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
             background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0518 50%, #000000 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            overflow-x: hidden; /* Prevents horizontal scroll from animations */
             position: relative;
             cursor: default;
             user-select: none;
+            padding: 40px 20px; /* Breathing room at top/bottom, enables safe scrolling */
         }
 
         /* ===== CONFETTI FALLING ===== */
@@ -45,7 +45,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 1;
-            overflow: hidden;
+            overflow: hidden; /* This is fine, it only applies to the confetti layer */
         }
 
         .confetti {
@@ -87,9 +87,9 @@
             width: 480px;
             max-width: 95vw;
             background: linear-gradient(145deg, 
-    rgba(30, 16, 53, 0.85) 0%, 
-    rgba(42, 22, 72, 0.85) 40%, 
-    rgba(26, 10, 46, 0.85) 100%);
+                rgba(30, 16, 53, 0.85) 0%, 
+                rgba(42, 22, 72, 0.85) 40%, 
+                rgba(26, 10, 46, 0.85) 100%);
             border-radius: 28px;
             padding: 35px 30px 40px;
             text-align: center;
@@ -101,7 +101,7 @@
                 0 20px 60px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
             animation: cardGlow 3s ease-in-out infinite;
-            position: relative;
+            margin: auto 0; /* Centers vertically on tall screens, prevents top-clipping on short screens */
         }
 
         .invitation-card::before {
@@ -123,18 +123,12 @@
         }
 
         @keyframes borderGradient {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         @keyframes cardGlow {
-            0%,
-            100% {
+            0%, 100% {
                 box-shadow:
                     0 0 60px rgba(0, 212, 255, 0.3),
                     0 0 120px rgba(255, 45, 120, 0.2),
@@ -211,23 +205,12 @@
             transform: rotate(45deg);
             animation: arrowPulse 1.5s ease-in-out infinite;
         }
-        .lane-arrows span:nth-child(2) {
-            animation-delay: 0.3s;
-        }
-        .lane-arrows span:nth-child(3) {
-            animation-delay: 0.6s;
-        }
+        .lane-arrows span:nth-child(2) { animation-delay: 0.3s; }
+        .lane-arrows span:nth-child(3) { animation-delay: 0.6s; }
 
         @keyframes arrowPulse {
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: rotate(45deg) scale(0.9);
-            }
-            50% {
-                opacity: 1;
-                transform: rotate(45deg) scale(1.1);
-            }
+            0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(0.9); }
+            50% { opacity: 1; transform: rotate(45deg) scale(1.1); }
         }
 
         /* Bowling Pins */
@@ -279,30 +262,14 @@
             border: 1px solid #ccc;
         }
 
-        .pin:nth-child(1) {
-            animation-delay: 0s;
-            transform: translateY(0);
-        }
-        .pin:nth-child(2) {
-            animation-delay: 0.3s;
-            transform: translateY(-3px);
-        }
-        .pin:nth-child(3) {
-            animation-delay: 0.15s;
-            transform: translateY(-6px);
-        }
-        .pin:nth-child(4) {
-            animation-delay: 0.45s;
-            transform: translateY(-3px);
-        }
-        .pin:nth-child(5) {
-            animation-delay: 0.6s;
-            transform: translateY(0);
-        }
+        .pin:nth-child(1) { animation-delay: 0s; transform: translateY(0); }
+        .pin:nth-child(2) { animation-delay: 0.3s; transform: translateY(-3px); }
+        .pin:nth-child(3) { animation-delay: 0.15s; transform: translateY(-6px); }
+        .pin:nth-child(4) { animation-delay: 0.45s; transform: translateY(-3px); }
+        .pin:nth-child(5) { animation-delay: 0.6s; transform: translateY(0); }
 
         @keyframes pinGlow {
-            0%,
-            100% {
+            0%, 100% {
                 filter: brightness(1);
                 box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 -3px 6px rgba(0, 0, 0, 0.15);
             }
@@ -313,31 +280,15 @@
         }
 
         @keyframes pinStripePulse {
-            0%,
-            100% {
-                box-shadow: 0 0 8px rgba(230, 57, 70, 0.7);
-                width: 8px;
-            }
-            50% {
-                box-shadow: 0 0 16px rgba(230, 57, 70, 1);
-                width: 9px;
-            }
+            0%, 100% { box-shadow: 0 0 8px rgba(230, 57, 70, 0.7); width: 8px; }
+            50% { box-shadow: 0 0 16px rgba(230, 57, 70, 1); width: 9px; }
         }
 
         @keyframes pinsWobble {
-            0%,
-            100% {
-                transform: rotate(0deg);
-            }
-            25% {
-                transform: rotate(1.5deg);
-            }
-            50% {
-                transform: rotate(0deg);
-            }
-            75% {
-                transform: rotate(-1.5deg);
-            }
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(1.5deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-1.5deg); }
         }
 
         /* Bowling Ball */
@@ -388,41 +339,18 @@
         }
 
         @keyframes ballRoll {
-            0% {
-                transform: translateX(0);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            45% {
-                transform: translateX(180px);
-            }
-            60% {
-                transform: translateX(190px);
-                opacity: 1;
-            }
-            70% {
-                transform: translateX(180px);
-                opacity: 0;
-            }
-            85% {
-                transform: translateX(0);
-                opacity: 0;
-            }
-            100% {
-                transform: translateX(0);
-                opacity: 0;
-            }
+            0% { transform: translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            45% { transform: translateX(180px); }
+            60% { transform: translateX(190px); opacity: 1; }
+            70% { transform: translateX(180px); opacity: 0; }
+            85% { transform: translateX(0); opacity: 0; }
+            100% { transform: translateX(0); opacity: 0; }
         }
 
         @keyframes ballSpin {
-            0% {
-                background-position: 0% 50%;
-            }
-            100% {
-                background-position: 200% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         /* Impact Effect */
@@ -445,57 +373,23 @@
             box-shadow: 0 0 10px rgba(255, 200, 0, 0.8);
         }
 
-        .impact-effect span:nth-child(1) {
-            transform: rotate(0deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite;
-        }
-        .impact-effect span:nth-child(2) {
-            transform: rotate(60deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite 0.1s;
-        }
-        .impact-effect span:nth-child(3) {
-            transform: rotate(120deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite 0.2s;
-        }
-        .impact-effect span:nth-child(4) {
-            transform: rotate(180deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite 0.3s;
-        }
-        .impact-effect span:nth-child(5) {
-            transform: rotate(240deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite 0.4s;
-        }
-        .impact-effect span:nth-child(6) {
-            transform: rotate(300deg) translateY(-25px);
-            animation: starFly 0.6s ease-out infinite 0.5s;
-        }
+        .impact-effect span:nth-child(1) { transform: rotate(0deg) translateY(-25px); animation: starFly 0.6s ease-out infinite; }
+        .impact-effect span:nth-child(2) { transform: rotate(60deg) translateY(-25px); animation: starFly 0.6s ease-out infinite 0.1s; }
+        .impact-effect span:nth-child(3) { transform: rotate(120deg) translateY(-25px); animation: starFly 0.6s ease-out infinite 0.2s; }
+        .impact-effect span:nth-child(4) { transform: rotate(180deg) translateY(-25px); animation: starFly 0.6s ease-out infinite 0.3s; }
+        .impact-effect span:nth-child(5) { transform: rotate(240deg) translateY(-25px); animation: starFly 0.6s ease-out infinite 0.4s; }
+        .impact-effect span:nth-child(6) { transform: rotate(300deg) translateY(-25px); animation: starFly 0.6s ease-out infinite 0.5s; }
 
         @keyframes impactBurst {
-            0%,
-            50%,
-            100% {
-                opacity: 0;
-            }
-            52% {
-                opacity: 1;
-            }
-            65% {
-                opacity: 1;
-            }
-            70% {
-                opacity: 0;
-            }
+            0%, 50%, 100% { opacity: 0; }
+            52% { opacity: 1; }
+            65% { opacity: 1; }
+            70% { opacity: 0; }
         }
 
         @keyframes starFly {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1.5);
-                opacity: 0;
-            }
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
         /* ===== TEXT CONTENT ===== */
@@ -517,15 +411,8 @@
         }
 
         @keyframes badgePulse {
-            0%,
-            100% {
-                box-shadow: 0 4px 15px rgba(255, 221, 0, 0.5);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 4px 30px rgba(255, 221, 0, 0.8);
-                transform: scale(1.05);
-            }
+            0%, 100% { box-shadow: 0 4px 15px rgba(255, 221, 0, 0.5); transform: scale(1); }
+            50% { box-shadow: 0 4px 30px rgba(255, 221, 0, 0.8); transform: scale(1.05); }
         }
 
         .title {
@@ -546,13 +433,8 @@
         }
 
         @keyframes titleGradient {
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .subtitle {
@@ -568,15 +450,8 @@
         }
 
         @keyframes subtitleShimmer {
-            0%,
-            100% {
-                opacity: 0.85;
-                text-shadow: 0 0 20px rgba(160, 120, 255, 0.5);
-            }
-            50% {
-                opacity: 1;
-                text-shadow: 0 0 35px rgba(160, 120, 255, 0.9);
-            }
+            0%, 100% { opacity: 0.85; text-shadow: 0 0 20px rgba(160, 120, 255, 0.5); }
+            50% { opacity: 1; text-shadow: 0 0 35px rgba(160, 120, 255, 0.9); }
         }
 
         .turning-12 {
@@ -600,19 +475,10 @@
         }
 
         @keyframes big12Bounce {
-            0%,
-            100% {
-                transform: translateY(0) scale(1);
-            }
-            30% {
-                transform: translateY(-10px) scale(1.1);
-            }
-            50% {
-                transform: translateY(0) scale(1);
-            }
-            70% {
-                transform: translateY(-5px) scale(1.05);
-            }
+            0%, 100% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-10px) scale(1.1); }
+            50% { transform: translateY(0) scale(1); }
+            70% { transform: translateY(-5px) scale(1.05); }
         }
 
         .details {
@@ -637,18 +503,10 @@
             animation: detailGlow 2.5s ease-in-out infinite;
         }
 
-        .detail-row:nth-child(1) {
-            animation-delay: 0s;
-        }
-        .detail-row:nth-child(2) {
-            animation-delay: 0.5s;
-        }
-        .detail-row:nth-child(3) {
-            animation-delay: 1s;
-        }
-        .detail-row:nth-child(4) {
-            animation-delay: 1.5s;
-        }
+        .detail-row:nth-child(1) { animation-delay: 0s; }
+        .detail-row:nth-child(2) { animation-delay: 0.5s; }
+        .detail-row:nth-child(3) { animation-delay: 1s; }
+        .detail-row:nth-child(4) { animation-delay: 1.5s; }
 
         .detail-row:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -657,13 +515,8 @@
         }
 
         @keyframes detailGlow {
-            0%,
-            100% {
-                box-shadow: 0 0 8px rgba(0, 212, 255, 0.1);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(0, 212, 255, 0.25);
-            }
+            0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 255, 0.1); }
+            50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.25); }
         }
 
         .detail-icon {
@@ -673,13 +526,8 @@
         }
 
         @keyframes iconBounce {
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-4px);
-            }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         .detail-text {
@@ -710,13 +558,8 @@
         }
 
         @keyframes phoneGlow {
-            0%,
-            100% {
-                text-shadow: 0 0 5px rgba(255, 221, 0, 0.5);
-            }
-            50% {
-                text-shadow: 0 0 15px rgba(255, 221, 0, 0.9);
-            }
+            0%, 100% { text-shadow: 0 0 5px rgba(255, 221, 0, 0.5); }
+            50% { text-shadow: 0 0 15px rgba(255, 221, 0, 0.9); }
         }
 
         /* ===== FLOATING ELEMENTS ===== */
@@ -728,49 +571,16 @@
             opacity: 0.7;
         }
 
-        .floating-element:nth-child(1) {
-            top: -20px;
-            left: -15px;
-            font-size: 2rem;
-            animation-delay: 0s;
-            animation-duration: 5s;
-        }
-        .floating-element:nth-child(2) {
-            top: -10px;
-            right: -10px;
-            font-size: 1.8rem;
-            animation-delay: 1s;
-            animation-duration: 6s;
-        }
-        .floating-element:nth-child(3) {
-            bottom: -15px;
-            left: 20%;
-            font-size: 1.5rem;
-            animation-delay: 2s;
-            animation-duration: 7s;
-        }
-        .floating-element:nth-child(4) {
-            bottom: -10px;
-            right: 15%;
-            font-size: 2.2rem;
-            animation-delay: 0.5s;
-            animation-duration: 5.5s;
-        }
+        .floating-element:nth-child(1) { top: -20px; left: -15px; font-size: 2rem; animation-delay: 0s; animation-duration: 5s; }
+        .floating-element:nth-child(2) { top: -10px; right: -10px; font-size: 1.8rem; animation-delay: 1s; animation-duration: 6s; }
+        .floating-element:nth-child(3) { bottom: -15px; left: 20%; font-size: 1.5rem; animation-delay: 2s; animation-duration: 7s; }
+        .floating-element:nth-child(4) { bottom: -10px; right: 15%; font-size: 2.2rem; animation-delay: 0.5s; animation-duration: 5.5s; }
 
         @keyframes floatAround {
-            0%,
-            100% {
-                transform: translateY(0) rotate(0deg);
-            }
-            25% {
-                transform: translateY(-12px) rotate(8deg);
-            }
-            50% {
-                transform: translateY(0) rotate(0deg);
-            }
-            75% {
-                transform: translateY(8px) rotate(-8deg);
-            }
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-12px) rotate(8deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(8px) rotate(-8deg); }
         }
 
         /* ===== SPARKLE TEXT ===== */
@@ -781,15 +591,8 @@
         }
 
         @keyframes sparkleTwinkle {
-            0%,
-            100% {
-                opacity: 0.4;
-                transform: scale(0.8);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         /* ===== RESPONSIVE ===== */
@@ -799,38 +602,15 @@
                 border-radius: 20px;
                 margin: 10px;
             }
-            .title {
-                font-size: 2rem;
-            }
-            .subtitle {
-                font-size: 1.2rem;
-            }
-            .bowling-scene {
-                height: 130px;
-            }
-            .pins-container {
-                right: 5%;
-                gap: 5px;
-                bottom: 45px;
-            }
-            .pin {
-                width: 14px;
-                height: 30px;
-            }
-            .bowling-ball {
-                width: 36px;
-                height: 36px;
-            }
-            .ball-container {
-                bottom: 6px;
-                left: 8%;
-            }
-            .turning-12 .big-12 {
-                font-size: 2.2rem;
-            }
-            .detail-text {
-                font-size: 0.85rem;
-            }
+            .title { font-size: 2rem; }
+            .subtitle { font-size: 1.2rem; }
+            .bowling-scene { height: 130px; }
+            .pins-container { right: 5%; gap: 5px; bottom: 45px; }
+            .pin { width: 14px; height: 30px; }
+            .bowling-ball { width: 36px; height: 36px; }
+            .ball-container { bottom: 6px; left: 8%; }
+            .turning-12 .big-12 { font-size: 2.2rem; }
+            .detail-text { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -944,25 +724,19 @@
             }
         })();
 
-        // ===== DYNAMIC PIN RESET ANIMATION =====
-        // The pins wobble continuously, but we can add a little "strike" burst
-        // by dynamically toggling a class. Let's keep it simple with CSS animations
-        // already in place.
-
         // ===== SUBTLE INTERACTIVE TOUCH =====
         document.querySelector('.invitation-card')?.addEventListener('click', function(e) {
-            // Create a little ripple effect on click
             const ripple = document.createElement('div');
             ripple.style.cssText = `
-                        position: absolute;
-                        border-radius: 50%;
-                        background: rgba(255,255,255,0.15);
-                        width: 20px;
-                        height: 20px;
-                        pointer-events: none;
-                        z-index: 20;
-                        animation: clickRipple 0.6s ease-out forwards;
-                    `;
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.15);
+                width: 20px;
+                height: 20px;
+                pointer-events: none;
+                z-index: 20;
+                animation: clickRipple 0.6s ease-out forwards;
+            `;
             const rect = this.getBoundingClientRect();
             ripple.style.left = (e.clientX - rect.left - 10) + 'px';
             ripple.style.top = (e.clientY - rect.top - 10) + 'px';
@@ -973,11 +747,11 @@
         // Add keyframes for click ripple dynamically
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
-                    @keyframes clickRipple {
-                        0% { transform: scale(0.5); opacity: 1; }
-                        100% { transform: scale(8); opacity: 0; }
-                    }
-                `;
+            @keyframes clickRipple {
+                0% { transform: scale(0.5); opacity: 1; }
+                100% { transform: scale(8); opacity: 0; }
+            }
+        `;
         document.head.appendChild(styleSheet);
 
         console.log('🎳 Happy 12th Birthday, Colton! 🎉');
